@@ -17,4 +17,4 @@ Upgrade the frontend into a more attractive, professional, and usability-focused
 - Validate the updated frontend with CI build and test commands.
 
 ## Status
-Implementation complete. The app shell, landing page, shorten flow, admin login, and admin dashboard are redesigned. Frontend-only UX enhancements include recent shortened-link history in local storage plus search and activity filters in the admin view. Build artifacts were produced successfully. Final Jest status remains inconclusive in this environment because the CRA test process does not return a reliable terminal exit here, so one local rerun is still the cleanest confirmation if needed.
+Implementation complete. The app shell, landing page, shorten flow, admin login, and admin dashboard are redesigned. Frontend-only UX enhancements include recent shortened-link history in local storage plus search and activity filters in the admin view. After a structural correction pass, the root container no longer clips content, grid children now shrink correctly, and the global stylesheet no longer overrides the redesigned typography system. Build artifacts were produced successfully.
