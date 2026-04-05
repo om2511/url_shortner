@@ -11,6 +11,8 @@ const Admin = () => {
   const [editingUrl, setEditingUrl] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activityFilter, setActivityFilter] = useState('all');
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('adminToken');
@@ -24,12 +26,12 @@ const Admin = () => {
     try {
       const token = localStorage.getItem('adminToken');
       const response = await api.get('/api/urls', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setUrls(response.data);
-    } catch (error) {
+    } catch (requestError) {
       setError('Failed to fetch URLs');
-      if (error.response?.status === 401) {
+      if (requestError.response?.status === 401) {
         handleLogout();
       }
     } finally {
@@ -43,16 +45,14 @@ const Admin = () => {
 
     if (token && adminUser) {
       try {
-        // Verify token with backend
         const response = await api.post('/api/admin/verify', {}, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
-        
+
         setAdmin(response.data.admin);
         setIsAuthenticated(true);
         await fetchUrls();
-      } catch (error) {
-        // Token is invalid, remove it
+      } catch (requestError) {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminUser');
         setIsAuthenticated(false);
@@ -82,20 +82,20 @@ const Admin = () => {
   const handleSaveEdit = async (urlId) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await api.put(`/api/urls/${urlId}`, {
-        originalUrl: editValue
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.put(
+        `/api/urls/${urlId}`,
+        {
+          originalUrl: editValue,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      // Update the URL in the list
-      setUrls(urls.map(url => 
-        url._id === urlId ? response.data : url
-      ));
-
+      setUrls(urls.map((url) => (url._id === urlId ? response.data : url)));
       setEditingUrl(null);
       setEditValue('');
-    } catch (error) {
+    } catch (requestError) {
       setError('Failed to update URL');
     }
   };
@@ -113,13 +113,12 @@ const Admin = () => {
     try {
       const token = localStorage.getItem('adminToken');
       await api.delete(`/api/urls/${urlId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Remove the URL from the list
-      setUrls(urls.filter(url => url._id !== urlId));
+      setUrls(urls.filter((url) => url._id !== urlId));
       setDeleteConfirm(null);
-    } catch (error) {
+    } catch (requestError) {
       setError('Failed to delete URL');
     }
   };
@@ -133,9 +132,31 @@ const Admin = () => {
     return date.toLocaleString();
   };
 
-  const truncateUrl = (url, maxLength = 50) => {
-    return url.length > maxLength ? url.substring(0, maxLength) + '...' : url;
-  };
+  const truncateUrl = (url, maxLength = 68) => (
+    url.length > maxLength ? `${url.substring(0, maxLength)}...` : url
+  );
+
+  const filteredUrls = urls.filter((url) => {
+    const matchesSearch =
+      url.originalUrl.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      url.shortCode.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesActivity =
+      activityFilter === 'all' ||
+      (activityFilter === 'active' && url.clicks > 0) ||
+      (activityFilter === 'unused' && url.clicks === 0);
+
+    return matchesSearch && matchesActivity;
+  });
+
+  const totalClicks = urls.reduce((sum, url) => sum + url.clicks, 0);
+  const activeLinks = urls.filter((url) => url.clicks > 0).length;
+  const topLink = urls.reduce((best, current) => {
+    if (!best || current.clicks > best.clicks) {
+      return current;
+    }
+    return best;
+  }, null);
 
   if (!isAuthenticated) {
     return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
@@ -143,73 +164,147 @@ const Admin = () => {
 
   if (loading) {
     return (
-      <div className="admin-page">
+      <div className="admin-page page-shell">
         <div className="container">
-          <div className="loading">Loading admin dashboard...</div>
+          <div className="loading-card elevated-panel">
+            <p className="section-tag">Admin workspace</p>
+            <div className="loading">Loading dashboard...</div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="admin-page">
+    <div className="admin-page page-shell">
       <div className="container">
-        <div className="admin-header">
-          <div className="admin-title">
+        <section className="admin-hero elevated-panel">
+          <div className="admin-hero-copy">
+            <p className="section-tag">Operations view</p>
             <h2>Admin Dashboard</h2>
-            <p>Welcome back, {admin?.username}!</p>
+            <p>
+              Review performance, clean up outdated links, and keep the short-link catalog
+              usable without leaving the page.
+            </p>
           </div>
-          <button onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
-        </div>
+          <div className="admin-hero-actions">
+            <div className="admin-chip">
+              <span className="status-dot" />
+              Signed in as {admin?.username}
+            </div>
+            <button onClick={handleLogout} className="logout-btn">
+              Logout
+            </button>
+          </div>
+        </section>
 
-        <div className="stats-summary">
-          <div className="stat-card">
-            <h3>{urls.length}</h3>
+        <section className="stats-summary">
+          <div className="stat-card stat-card-accent">
             <p>Total URLs</p>
+            <h3>{urls.length}</h3>
+            <span>Current managed inventory</span>
           </div>
           <div className="stat-card">
-            <h3>{urls.reduce((sum, url) => sum + url.clicks, 0)}</h3>
             <p>Total Clicks</p>
+            <h3>{totalClicks}</h3>
+            <span>Aggregate redirect activity</span>
           </div>
           <div className="stat-card">
-            <h3>{urls.filter(url => url.clicks > 0).length}</h3>
-            <p>Active URLs</p>
+            <p>Active Links</p>
+            <h3>{activeLinks}</h3>
+            <span>Links with at least one click</span>
           </div>
-        </div>
+          <div className="stat-card">
+            <p>Top Performer</p>
+            <h3>{topLink ? topLink.clicks : 0}</h3>
+            <span>{topLink ? topLink.shortCode : 'No traffic yet'}</span>
+          </div>
+        </section>
 
         {error && (
-          <div className="error-message">
+          <div className="feedback-banner feedback-error">
             <p>{error}</p>
-            <button onClick={() => setError('')} className="close-error">×</button>
+            <button onClick={() => setError('')} className="close-error" type="button">
+              ×
+            </button>
           </div>
         )}
 
-        <div className="urls-section">
-          <div className="section-header">
-            <h3>Manage Shortened URLs</h3>
-            <button onClick={fetchUrls} className="refresh-btn">
-              Refresh
-            </button>
+        <section className="dashboard-toolbar elevated-panel">
+          <div className="toolbar-copy">
+            <p className="section-tag">Catalog controls</p>
+            <h3>Filter the workspace</h3>
           </div>
 
-          {urls.length === 0 ? (
+          <div className="toolbar-controls">
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by original URL or shortcode"
+              className="toolbar-search"
+            />
+
+            <div className="toolbar-filter-group" role="group" aria-label="Filter links">
+              <button
+                type="button"
+                className={`filter-pill${activityFilter === 'all' ? ' filter-pill-active' : ''}`}
+                onClick={() => setActivityFilter('all')}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                className={`filter-pill${activityFilter === 'active' ? ' filter-pill-active' : ''}`}
+                onClick={() => setActivityFilter('active')}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                className={`filter-pill${activityFilter === 'unused' ? ' filter-pill-active' : ''}`}
+                onClick={() => setActivityFilter('unused')}
+              >
+                Unused
+              </button>
+            </div>
+
+            <button onClick={fetchUrls} className="refresh-btn" type="button">
+              Refresh data
+            </button>
+          </div>
+        </section>
+
+        <section className="urls-section elevated-panel">
+          <div className="panel-header">
+            <div>
+              <p className="section-tag">Managed links</p>
+              <h3>Results: {filteredUrls.length}</h3>
+            </div>
+            <span className="panel-support-copy">
+              {searchTerm || activityFilter !== 'all'
+                ? 'Filtered view'
+                : 'Complete collection'}
+            </span>
+          </div>
+
+          {filteredUrls.length === 0 ? (
             <div className="empty-state">
-              <p>No URLs have been shortened yet.</p>
+              <p>No links match the current filters.</p>
             </div>
           ) : (
             <div className="urls-table">
               <div className="table-header">
                 <div className="col">Original URL</div>
-                <div className="col">Short Code</div>
+                <div className="col">Short Link</div>
                 <div className="col">Clicks</div>
                 <div className="col">Created</div>
                 <div className="col">Actions</div>
               </div>
-              {urls.map((url) => (
+
+              {filteredUrls.map((url) => (
                 <div key={url._id} className="table-row">
-                  <div className="col original-url">
+                  <div className="col original-url" data-label="Original URL">
                     {editingUrl === url._id ? (
                       <input
                         type="url"
@@ -219,9 +314,9 @@ const Admin = () => {
                         placeholder="Enter new URL"
                       />
                     ) : (
-                      <a 
-                        href={url.originalUrl} 
-                        target="_blank" 
+                      <a
+                        href={url.originalUrl}
+                        target="_blank"
                         rel="noopener noreferrer"
                         title={url.originalUrl}
                       >
@@ -229,51 +324,47 @@ const Admin = () => {
                       </a>
                     )}
                   </div>
-                  <div className="col short-url">
-                    <a 
-                      href={url.shortUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
+
+                  <div className="col short-url" data-label="Short Link">
+                    <a href={url.shortUrl} target="_blank" rel="noopener noreferrer">
                       {url.shortCode}
                     </a>
                   </div>
-                  <div className="col clicks">
+
+                  <div className="col clicks" data-label="Clicks">
                     <span className={`click-count ${url.clicks > 0 ? 'has-clicks' : ''}`}>
                       {url.clicks}
                     </span>
                   </div>
-                  <div className="col created">
+
+                  <div className="col created" data-label="Created">
                     {formatDate(url.createdAt)}
                   </div>
-                  <div className="col actions">
+
+                  <div className="col actions" data-label="Actions">
                     {editingUrl === url._id ? (
                       <div className="edit-actions">
-                        <button 
+                        <button
                           onClick={() => handleSaveEdit(url._id)}
                           className="save-btn"
                           disabled={!editValue.trim()}
+                          type="button"
                         >
                           Save
                         </button>
-                        <button 
-                          onClick={handleCancelEdit}
-                          className="cancel-btn"
-                        >
+                        <button onClick={handleCancelEdit} className="cancel-btn" type="button">
                           Cancel
                         </button>
                       </div>
                     ) : (
-                      <div className="action-buttons">
-                        <button 
-                          onClick={() => handleEdit(url)}
-                          className="edit-btn"
-                        >
+                      <div className="action-buttons table-actions">
+                        <button onClick={() => handleEdit(url)} className="edit-btn" type="button">
                           Edit
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDelete(url._id)}
                           className="delete-btn"
+                          type="button"
                         >
                           Delete
                         </button>
@@ -284,26 +375,24 @@ const Admin = () => {
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
 
-      {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="modal-overlay">
-          <div className="modal">
-            <h3>Confirm Deletion</h3>
-            <p>Are you sure you want to delete this URL? This action cannot be undone.</p>
+          <div className="modal elevated-panel">
+            <p className="section-tag">Confirm action</p>
+            <h3>Delete this short link?</h3>
+            <p>This action removes the link from the dashboard and cannot be undone.</p>
             <div className="modal-actions">
-              <button 
+              <button
                 onClick={() => confirmDelete(deleteConfirm)}
                 className="confirm-delete-btn"
+                type="button"
               >
-                Yes, Delete
+                Yes, delete
               </button>
-              <button 
-                onClick={cancelDelete}
-                className="cancel-delete-btn"
-              >
+              <button onClick={cancelDelete} className="cancel-delete-btn" type="button">
                 Cancel
               </button>
             </div>
