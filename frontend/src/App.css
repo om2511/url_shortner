@@ -983,8 +983,6 @@ input {
 }
 
 @media (max-width: 900px) {
-  .site-header-inner,
-  .admin-hero,
   .dashboard-toolbar,
   .result-header,
   .panel-header,
@@ -993,12 +991,21 @@ input {
     align-items: flex-start;
   }
 
+  .site-header-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+  }
+
   .site-nav {
     display: none;
     width: 100%;
+    grid-column: 1 / -1;
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
+    padding-top: 8px;
   }
 
   .site-nav-open {
@@ -1014,6 +1021,31 @@ input {
     border-color: rgba(62, 46, 32, 0.12);
     width: 100%;
     text-align: center;
+  }
+
+  .brand-lockup {
+    min-width: 0;
+    width: auto;
+  }
+
+  .brand-copy h1 {
+    font-size: 1.35rem;
+  }
+
+  .brand-eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+  }
+
+  .admin-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-hero-actions {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .site-footer-inner {
@@ -1063,6 +1095,10 @@ input {
     font-size: 1.3rem;
   }
 
+  .site-header-inner {
+    padding: 16px 18px;
+  }
+
   .hero-card,
   .result-section,
   .info-panel,
@@ -1106,6 +1142,11 @@ input {
     gap: 8px;
   }
 
+  .nav-toggle {
+    width: 46px;
+    height: 46px;
+  }
+
   .table-scroll {
     overflow-x: visible;
   }
@@ -1136,6 +1177,18 @@ input {
     letter-spacing: 0.14em;
     text-transform: uppercase;
     font-weight: 800;
+  }
+
+  .admin-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-chip,
+  .logout-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
   }
 
   .table-actions,
