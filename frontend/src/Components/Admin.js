@@ -233,7 +233,7 @@ const Admin = () => {
         <section className="dashboard-toolbar elevated-panel">
           <div className="toolbar-copy">
             <p className="section-tag">Catalog controls</p>
-            <h3>Filter the workspace</h3>
+            <h3>Search and filter the link catalog</h3>
           </div>
 
           <div className="toolbar-controls">
@@ -293,86 +293,88 @@ const Admin = () => {
               <p>No links match the current filters.</p>
             </div>
           ) : (
-            <div className="urls-table">
-              <div className="table-header">
-                <div className="col">Original URL</div>
-                <div className="col">Short Link</div>
-                <div className="col">Clicks</div>
-                <div className="col">Created</div>
-                <div className="col">Actions</div>
-              </div>
-
-              {filteredUrls.map((url) => (
-                <div key={url._id} className="table-row">
-                  <div className="col original-url" data-label="Original URL">
-                    {editingUrl === url._id ? (
-                      <input
-                        type="url"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="edit-input"
-                        placeholder="Enter new URL"
-                      />
-                    ) : (
-                      <a
-                        href={url.originalUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={url.originalUrl}
-                      >
-                        {truncateUrl(url.originalUrl)}
-                      </a>
-                    )}
-                  </div>
-
-                  <div className="col short-url" data-label="Short Link">
-                    <a href={url.shortUrl} target="_blank" rel="noopener noreferrer">
-                      {url.shortCode}
-                    </a>
-                  </div>
-
-                  <div className="col clicks" data-label="Clicks">
-                    <span className={`click-count ${url.clicks > 0 ? 'has-clicks' : ''}`}>
-                      {url.clicks}
-                    </span>
-                  </div>
-
-                  <div className="col created" data-label="Created">
-                    {formatDate(url.createdAt)}
-                  </div>
-
-                  <div className="col actions" data-label="Actions">
-                    {editingUrl === url._id ? (
-                      <div className="edit-actions">
-                        <button
-                          onClick={() => handleSaveEdit(url._id)}
-                          className="save-btn"
-                          disabled={!editValue.trim()}
-                          type="button"
-                        >
-                          Save
-                        </button>
-                        <button onClick={handleCancelEdit} className="cancel-btn" type="button">
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="action-buttons table-actions">
-                        <button onClick={() => handleEdit(url)} className="edit-btn" type="button">
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(url._id)}
-                          className="delete-btn"
-                          type="button"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
+            <div className="table-scroll">
+              <div className="urls-table">
+                <div className="table-header">
+                  <div className="col">Original URL</div>
+                  <div className="col">Short Link</div>
+                  <div className="col">Clicks</div>
+                  <div className="col">Created</div>
+                  <div className="col">Actions</div>
                 </div>
-              ))}
+
+                {filteredUrls.map((url) => (
+                  <div key={url._id} className="table-row">
+                    <div className="col original-url" data-label="Original URL">
+                      {editingUrl === url._id ? (
+                        <input
+                          type="url"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="edit-input"
+                          placeholder="Enter new URL"
+                        />
+                      ) : (
+                        <a
+                          href={url.originalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={url.originalUrl}
+                        >
+                          {truncateUrl(url.originalUrl)}
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="col short-url" data-label="Short Link">
+                      <a href={url.shortUrl} target="_blank" rel="noopener noreferrer">
+                        {url.shortCode}
+                      </a>
+                    </div>
+
+                    <div className="col clicks" data-label="Clicks">
+                      <span className={`click-count ${url.clicks > 0 ? 'has-clicks' : ''}`}>
+                        {url.clicks}
+                      </span>
+                    </div>
+
+                    <div className="col created" data-label="Created">
+                      {formatDate(url.createdAt)}
+                    </div>
+
+                    <div className="col actions" data-label="Actions">
+                      {editingUrl === url._id ? (
+                        <div className="edit-actions">
+                          <button
+                            onClick={() => handleSaveEdit(url._id)}
+                            className="save-btn"
+                            disabled={!editValue.trim()}
+                            type="button"
+                          >
+                            Save
+                          </button>
+                          <button onClick={handleCancelEdit} className="cancel-btn" type="button">
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="action-buttons table-actions">
+                          <button onClick={() => handleEdit(url)} className="edit-btn" type="button">
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(url._id)}
+                            className="delete-btn"
+                            type="button"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </section>

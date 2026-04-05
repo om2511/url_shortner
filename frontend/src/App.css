@@ -168,6 +168,7 @@ input {
   border-radius: 999px;
   transition: all 0.25s ease;
   font-weight: 700;
+  border: 1px solid transparent;
 }
 
 .nav-link:hover {
@@ -514,6 +515,10 @@ input {
   gap: 16px;
 }
 
+.panel-header {
+  margin-bottom: 18px;
+}
+
 .result-header h3,
 .info-panel h3,
 .recent-panel h3,
@@ -591,7 +596,9 @@ input {
 }
 
 .workspace-grid {
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  margin-top: 24px;
 }
 
 .feature-list {
@@ -623,6 +630,7 @@ input {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  width: 100%;
 }
 
 .recent-actions {
@@ -670,6 +678,11 @@ input {
 
 .admin-hero-copy h2 {
   max-width: none;
+}
+
+.admin-hero-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .stats-summary {
@@ -730,12 +743,36 @@ input {
   color: #fffaf5;
 }
 
+.dashboard-toolbar {
+  margin-top: 18px;
+}
+
+.urls-section {
+  margin-top: 18px;
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.table-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(62, 46, 32, 0.18);
+  border-radius: 999px;
+}
+
 .urls-table {
   overflow: hidden;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.56);
   border: 1px solid var(--border);
   width: 100%;
+  min-width: 860px;
 }
 
 .table-header,
@@ -913,40 +950,20 @@ input {
 
   .site-nav {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: space-between;
     flex-wrap: wrap;
+  }
+
+  .nav-link {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(62, 46, 32, 0.12);
   }
 
   .site-footer-inner {
     align-items: flex-start;
   }
 
-  .table-header,
-  .table-row {
-    grid-template-columns: 1fr;
-  }
-
-  .table-header {
-    display: none;
-  }
-
-  .table-row {
-    padding: 18px;
-  }
-
-  .table-row .col::before {
-    content: attr(data-label);
-    display: block;
-    margin-bottom: 8px;
-    color: var(--muted);
-    font-size: 0.76rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    font-weight: 800;
-  }
-
   .action-buttons,
-  .table-actions,
   .modal-actions {
     flex-direction: column;
     width: 100%;
@@ -1026,7 +1043,19 @@ input {
   }
 
   .nav-link {
+    width: calc(50% - 4px);
+    text-align: center;
+  }
+
+  .admin-hero-actions {
     width: 100%;
+    justify-content: stretch;
+  }
+
+  .admin-chip,
+  .logout-btn {
+    width: 100%;
+    justify-content: center;
     text-align: center;
   }
 }
