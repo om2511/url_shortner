@@ -1,10 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import UrlShortener from './Components/UrlShortener';
 import Admin from './Components/Admin';
 import './App.css';
 
 function App() {
+  const [isNavOpen, setIsNavOpen] = useState(false);
+
+  const handleNavToggle = () => {
+    setIsNavOpen((current) => !current);
+  };
+
+  const handleNavClose = () => {
+    setIsNavOpen(false);
+  };
+
   return (
     <Router>
       <div className="App">
@@ -24,17 +34,31 @@ function App() {
               </div>
             </div>
 
-            <nav className="site-nav" aria-label="Primary">
+            <button
+              type="button"
+              className={`nav-toggle${isNavOpen ? ' nav-toggle-open' : ''}`}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isNavOpen}
+              onClick={handleNavToggle}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+
+            <nav className={`site-nav${isNavOpen ? ' site-nav-open' : ''}`} aria-label="Primary">
               <NavLink
                 to="/"
                 end
                 className={({ isActive }) => `nav-link${isActive ? ' nav-link-active' : ''}`}
+                onClick={handleNavClose}
               >
                 Workspace
               </NavLink>
               <NavLink
                 to="/admin"
                 className={({ isActive }) => `nav-link${isActive ? ' nav-link-active' : ''}`}
+                onClick={handleNavClose}
               >
                 Admin
               </NavLink>
