@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 const AdminLogin = ({ onLoginSuccess }) => {
   const [credentials, setCredentials] = useState({
@@ -15,7 +15,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
     setError('');
 
     try {
-      const response = await axios.post('/api/admin/login', credentials);
+      const response = await api.post('/api/admin/login', credentials);
       
       // Store token in localStorage
       localStorage.setItem('adminToken', response.data.token);
@@ -87,12 +87,6 @@ const AdminLogin = ({ onLoginSuccess }) => {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-
-          <div className="demo-credentials">
-            <p><strong>Demo Credentials:</strong></p>
-            <p>Username: admin</p>
-            <p>Password: admin123</p>
-          </div>
         </div>
       </div>
     </div>

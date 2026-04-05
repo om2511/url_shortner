@@ -10,25 +10,68 @@ const bcrypt = require('bcryptjs');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+function requireEnv(name) {
+  const value = process.env[name]?.trim();
+
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+
+  return value;
+}
+
+function parseAllowedOrigins() {
+  const rawOrigins = process.env.CORS_ALLOWED_ORIGINS?.trim();
+
+  if (!rawOrigins) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Missing required environment variable: CORS_ALLOWED_ORIGINS');
+    }
+
+    return ['http://localhost:3000'];
+  }
+
+  return rawOrigins
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+function loadConfig() {
+  const adminUsername = process.env.ADMIN_USERNAME?.trim();
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if ((adminUsername && !adminPassword) || (!adminUsername && adminPassword)) {
+    throw new Error('ADMIN_USERNAME and ADMIN_PASSWORD must both be provided together');
+  }
+
+  return {
+    port: process.env.PORT || 5000,
+    mongoUri: requireEnv('MONGODB_URI'),
+    jwtSecret: requireEnv('JWT_SECRET'),
+    baseUrl: requireEnv('BASE_URL').replace(/\/+$/, ''),
+    allowedOrigins: parseAllowedOrigins(),
+    adminSeedUsername: adminUsername,
+    adminSeedPassword: adminPassword,
+  };
+}
+
+const config = loadConfig();
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || config.allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Origin not allowed by CORS'));
+    },
+  })
+);
 app.use(express.json());
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/urlshortener', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', () => {
-  console.log('Connected to MongoDB');
-});
-
-// URL Schema
 const urlSchema = new mongoose.Schema({
   originalUrl: {
     type: String,
@@ -55,7 +98,6 @@ const urlSchema = new mongoose.Schema({
 
 const Url = mongoose.model('Url', urlSchema);
 
-// Admin Schema
 const adminSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -74,85 +116,89 @@ const adminSchema = new mongoose.Schema({
 
 const Admin = mongoose.model('Admin', adminSchema);
 
-// Create default admin if none exists
-const createDefaultAdmin = async () => {
-  try {
-    const adminExists = await Admin.findOne({ username: 'admin' });
-    if (!adminExists) {
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      const defaultAdmin = new Admin({
-        username: 'admin',
-        password: hashedPassword,
-      });
-      await defaultAdmin.save();
-      console.log('Default admin created - Username: admin, Password: admin123');
-    }
-  } catch (error) {
-    console.error('Error creating default admin:', error);
+async function ensureSeedAdmin() {
+  if (!config.adminSeedUsername || !config.adminSeedPassword) {
+    console.log('Admin seed skipped because ADMIN_USERNAME and ADMIN_PASSWORD are not set');
+    return;
   }
-};
 
-// Call create default admin after DB connection
-db.once('open', () => {
-  console.log('Connected to MongoDB');
-  createDefaultAdmin();
-});
+  const adminExists = await Admin.findOne({ username: config.adminSeedUsername });
 
-// Authentication middleware
-const authenticateAdmin = async (req, res, next) => {
+  if (adminExists) {
+    console.log(`Admin seed skipped because "${config.adminSeedUsername}" already exists`);
+    return;
+  }
+
+  const hashedPassword = await bcrypt.hash(config.adminSeedPassword, 12);
+  const admin = new Admin({
+    username: config.adminSeedUsername,
+    password: hashedPassword,
+  });
+
+  await admin.save();
+  console.log(`Seeded admin account "${config.adminSeedUsername}"`);
+}
+
+async function authenticateAdmin(req, res, next) {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
       return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key');
+    const decoded = jwt.verify(token, config.jwtSecret);
     const admin = await Admin.findById(decoded.adminId);
-    
+
     if (!admin) {
       return res.status(401).json({ error: 'Invalid token.' });
     }
 
     req.admin = admin;
-    next();
+    return next();
   } catch (error) {
-    res.status(400).json({ error: 'Invalid token.' });
+    return res.status(401).json({ error: 'Invalid token.' });
   }
-};
+}
 
-// Routes
+app.get('/health', async (req, res) => {
+  try {
+    await mongoose.connection.db.admin().ping();
 
-// POST /api/admin/login - Admin login
+    res.json({
+      status: 'ok',
+      mongodb: 'connected',
+      uptimeSeconds: Math.round(process.uptime()),
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'degraded',
+      mongodb: 'disconnected',
+    });
+  }
+});
+
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Validate input
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // Find admin
     const admin = await Admin.findOne({ username });
     if (!admin) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    // Check password
     const validPassword = await bcrypt.compare(password, admin.password);
     if (!validPassword) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { adminId: admin._id }, 
-      process.env.JWT_SECRET || 'fallback_secret_key',
-      { expiresIn: '24h' }
-    );
+    const token = jwt.sign({ adminId: admin._id }, config.jwtSecret, { expiresIn: '24h' });
 
-    res.json({
+    return res.json({
       token,
       admin: {
         id: admin._id,
@@ -160,12 +206,11 @@ app.post('/api/admin/login', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Admin login failed:', error);
+    return res.status(500).json({ error: 'Server error' });
   }
 });
 
-// POST /api/admin/verify - Verify admin token
 app.post('/api/admin/verify', authenticateAdmin, (req, res) => {
   res.json({
     admin: {
@@ -175,17 +220,14 @@ app.post('/api/admin/verify', authenticateAdmin, (req, res) => {
   });
 });
 
-// POST /api/shorten - Create shortened URL
 app.post('/api/shorten', async (req, res) => {
   try {
     const { originalUrl } = req.body;
 
-    // Validate URL
     if (!validUrl.isUri(originalUrl)) {
       return res.status(400).json({ error: 'Invalid URL' });
     }
 
-    // Check if URL already exists
     let url = await Url.findOne({ originalUrl });
     if (url) {
       return res.json({
@@ -195,12 +237,9 @@ app.post('/api/shorten', async (req, res) => {
       });
     }
 
-    // Generate short code
     const shortCode = shortid.generate();
-    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
-    const shortUrl = `${baseUrl}/${shortCode}`;
+    const shortUrl = `${config.baseUrl}/${shortCode}`;
 
-    // Create new URL document
     url = new Url({
       originalUrl,
       shortCode,
@@ -209,79 +248,49 @@ app.post('/api/shorten', async (req, res) => {
 
     await url.save();
 
-    res.json({
+    return res.json({
       originalUrl: url.originalUrl,
       shortUrl: url.shortUrl,
       shortCode: url.shortCode,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('URL shortening failed:', error);
+    return res.status(500).json({ error: 'Server error' });
   }
 });
 
-// GET /:shortcode - Redirect to original URL
-app.get('/:shortcode', async (req, res) => {
-  try {
-    const { shortcode } = req.params;
-
-    const url = await Url.findOne({ shortCode: shortcode });
-    if (!url) {
-      return res.status(404).json({ error: 'URL not found' });
-    }
-
-    // Increment click count
-    url.clicks += 1;
-    await url.save();
-
-    // Redirect to original URL
-    res.redirect(url.originalUrl);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// GET /api/urls - Get all URLs (for admin) - PROTECTED
 app.get('/api/urls', authenticateAdmin, async (req, res) => {
   try {
     const urls = await Url.find().sort({ createdAt: -1 });
-    res.json(urls);
+    return res.json(urls);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Fetching URLs failed:', error);
+    return res.status(500).json({ error: 'Server error' });
   }
 });
 
-// PUT /api/urls/:id - Edit URL (admin only) - PROTECTED
 app.put('/api/urls/:id', authenticateAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { originalUrl } = req.body;
 
-    // Validate URL
     if (!validUrl.isUri(originalUrl)) {
       return res.status(400).json({ error: 'Invalid URL' });
     }
 
-    const updatedUrl = await Url.findByIdAndUpdate(
-      id,
-      { originalUrl },
-      { new: true }
-    );
+    const updatedUrl = await Url.findByIdAndUpdate(id, { originalUrl }, { new: true });
 
     if (!updatedUrl) {
       return res.status(404).json({ error: 'URL not found' });
     }
 
-    res.json(updatedUrl);
+    return res.json(updatedUrl);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Updating URL failed:', error);
+    return res.status(500).json({ error: 'Server error' });
   }
 });
 
-// DELETE /api/urls/:id - Delete URL (admin only) - PROTECTED
 app.delete('/api/urls/:id', authenticateAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -292,30 +301,62 @@ app.delete('/api/urls/:id', authenticateAdmin, async (req, res) => {
       return res.status(404).json({ error: 'URL not found' });
     }
 
-    res.json({ message: 'URL deleted successfully' });
+    return res.json({ message: 'URL deleted successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Deleting URL failed:', error);
+    return res.status(500).json({ error: 'Server error' });
   }
 });
 
-// GET /api/urls/:shortcode - Get URL details
 app.get('/api/urls/:shortcode', async (req, res) => {
   try {
     const { shortcode } = req.params;
     const url = await Url.findOne({ shortCode: shortcode });
-    
+
     if (!url) {
       return res.status(404).json({ error: 'URL not found' });
     }
 
-    res.json(url);
+    return res.json(url);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Fetching URL details failed:', error);
+    return res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.get('/:shortcode', async (req, res) => {
+  try {
+    const { shortcode } = req.params;
+    const url = await Url.findOne({ shortCode: shortcode });
+
+    if (!url) {
+      return res.status(404).json({ error: 'URL not found' });
+    }
+
+    url.clicks += 1;
+    await url.save();
+
+    return res.redirect(url.originalUrl);
+  } catch (error) {
+    console.error('Redirect failed:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
 });
+
+async function startServer() {
+  try {
+    await mongoose.connect(config.mongoUri);
+    console.log('Connected to MongoDB');
+
+    await ensureSeedAdmin();
+
+    app.listen(config.port, () => {
+      console.log(`Server running on port ${config.port}`);
+    });
+  } catch (error) {
+    console.error('Server startup failed:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

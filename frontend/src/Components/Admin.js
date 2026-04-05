@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '../api';
 import AdminLogin from './AdminLogin';
 
 const Admin = () => {
@@ -12,18 +12,39 @@ const Admin = () => {
   const [editValue, setEditValue] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  useEffect(() => {
-    checkAuthStatus();
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    setAdmin(null);
+    setIsAuthenticated(false);
+    setUrls([]);
   }, []);
 
-  const checkAuthStatus = async () => {
+  const fetchUrls = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await api.get('/api/urls', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUrls(response.data);
+    } catch (error) {
+      setError('Failed to fetch URLs');
+      if (error.response?.status === 401) {
+        handleLogout();
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [handleLogout]);
+
+  const checkAuthStatus = useCallback(async () => {
     const token = localStorage.getItem('adminToken');
     const adminUser = localStorage.getItem('adminUser');
 
     if (token && adminUser) {
       try {
         // Verify token with backend
-        const response = await axios.post('/api/admin/verify', {}, {
+        const response = await api.post('/api/admin/verify', {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -41,37 +62,16 @@ const Admin = () => {
       setIsAuthenticated(false);
       setLoading(false);
     }
-  };
+  }, [fetchUrls]);
 
-  const fetchUrls = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await axios.get('/api/urls', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUrls(response.data);
-    } catch (error) {
-      setError('Failed to fetch URLs');
-      if (error.response?.status === 401) {
-        handleLogout();
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
 
   const handleLoginSuccess = (adminUser) => {
     setAdmin(adminUser);
     setIsAuthenticated(true);
     fetchUrls();
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
-    setAdmin(null);
-    setIsAuthenticated(false);
-    setUrls([]);
   };
 
   const handleEdit = (url) => {
@@ -82,7 +82,7 @@ const Admin = () => {
   const handleSaveEdit = async (urlId) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await axios.put(`/api/urls/${urlId}`, {
+      const response = await api.put(`/api/urls/${urlId}`, {
         originalUrl: editValue
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -112,7 +112,7 @@ const Admin = () => {
   const confirmDelete = async (urlId) => {
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.delete(`/api/urls/${urlId}`, {
+      await api.delete(`/api/urls/${urlId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

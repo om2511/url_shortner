@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 const UrlShortener = () => {
   const [originalUrl, setOriginalUrl] = useState('');
@@ -16,7 +16,7 @@ const UrlShortener = () => {
     setCopied(false);
 
     try {
-      const response = await axios.post('/api/shorten', {
+      const response = await api.post('/api/shorten', {
         originalUrl: originalUrl,
       });
 
