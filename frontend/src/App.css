@@ -1232,6 +1232,16 @@ input:focus-visible {
     width: 100%;
   }
 
+  .toolbar-search {
+    min-width: 0;
+    min-height: 52px;
+    height: auto;
+    border-radius: 18px;
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+  }
+
   .toolbar-filter-group {
     width: 100%;
   }
