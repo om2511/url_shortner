@@ -859,7 +859,7 @@ input:focus-visible {
 
 .toolbar-search {
   min-width: 260px;
-  flex: 1 1 280px;
+  flex: 1 1;
 }
 
 .toolbar-filter-group {
@@ -1230,16 +1230,6 @@ input:focus-visible {
   .refresh-btn,
   .logout-btn {
     width: 100%;
-  }
-
-  .toolbar-search {
-    min-width: 0;
-    min-height: 52px;
-    height: auto;
-    border-radius: 18px;
-    -webkit-appearance: none;
-    appearance: none;
-    box-sizing: border-box;
   }
 
   .toolbar-filter-group {
