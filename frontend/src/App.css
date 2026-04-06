@@ -859,7 +859,6 @@ input:focus-visible {
 
 .toolbar-search {
   min-width: 260px;
-  flex: 1 1;
 }
 
 .toolbar-filter-group {
