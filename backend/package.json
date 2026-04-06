@@ -1,7 +1,7 @@
 {
-  "name": "url-shortener-backend",
+  "name": "linkify-backend",
   "version": "1.0.0",
-  "description": "Backend for URL Shortener App",
+  "description": "Backend for Linkify",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -181,10 +181,10 @@ const Admin = () => {
         <section className="admin-hero elevated-panel">
           <div className="admin-hero-copy">
             <p className="section-tag">Operations view</p>
-            <h2>Admin Dashboard</h2>
+            <h2>Keep the link catalog clean and on-brand.</h2>
             <p>
               Review performance, clean up outdated links, and keep the short-link catalog
-              usable without leaving the page.
+              aligned with the same dark violet and yellow brand language.
             </p>
           </div>
           <div className="admin-hero-actions">
@@ -217,7 +217,7 @@ const Admin = () => {
           <div className="stat-card">
             <p>Top Performer</p>
             <h3>{topLink ? topLink.clicks : 0}</h3>
-            <span>{topLink ? topLink.shortCode : 'No traffic yet'}</span>
+            <span>{topLink ? topLink.shortCode : 'No activity recorded yet'}</span>
           </div>
         </section>
 
@@ -233,7 +233,7 @@ const Admin = () => {
         <section className="dashboard-toolbar elevated-panel">
           <div className="toolbar-copy">
             <p className="section-tag">Catalog controls</p>
-            <h3>Search and filter the link catalog</h3>
+            <h3>Search, filter, and refine the link library</h3>
           </div>
 
           <div className="toolbar-controls">
@@ -241,7 +241,7 @@ const Admin = () => {
               type="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by original URL or shortcode"
+              placeholder="Search by original URL or short code"
               className="toolbar-search"
             />
 
@@ -312,7 +312,7 @@ const Admin = () => {
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
                           className="edit-input"
-                          placeholder="Enter new URL"
+                          placeholder="Paste replacement URL"
                         />
                       ) : (
                         <a

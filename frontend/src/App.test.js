@@ -13,6 +13,6 @@ jest.mock('./api', () => ({
 
 test('renders the application header', () => {
   render(<App />);
-  const headingElement = screen.getByText(/url shortener/i);
+  const headingElement = screen.getByText(/linkify/i);
   expect(headingElement).toBeInTheDocument();
 });

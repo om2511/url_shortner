@@ -42,8 +42,8 @@ const AdminLogin = ({ onLoginSuccess }) => {
           <p className="section-tag">Admin workspace</p>
           <h2>Manage links, monitor usage, and keep the catalog clean.</h2>
           <p className="hero-description">
-            The admin area is built for quick review and low-friction maintenance.
-            Sign in to edit destinations, delete old links, and monitor activity.
+            A focused dashboard for reviewing links, managing redirects, and keeping the
+            link catalog organized.
           </p>
 
           <div className="login-benefits">
@@ -76,7 +76,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
                 name="username"
                 value={credentials.username}
                 onChange={handleInputChange}
-                placeholder="Enter admin username"
+                placeholder="Admin username"
                 required
               />
             </div>
@@ -89,7 +89,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
                 name="password"
                 value={credentials.password}
                 onChange={handleInputChange}
-                placeholder="Enter admin password"
+                placeholder="Admin password"
                 required
               />
             </div>

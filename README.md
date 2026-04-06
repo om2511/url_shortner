@@ -1,6 +1,6 @@
-# URL Shortener App (MERN Stack)
+# Linkify (MERN Stack)
 
-A full-stack URL shortener application built with MongoDB, Express.js, React, and Node.js.
+A full-stack link management application built with MongoDB, Express.js, React, and Node.js.
 
 ## Features
 
@@ -37,7 +37,7 @@ A full-stack URL shortener application built with MongoDB, Express.js, React, an
 ## Project Structure
 
 ```
-url-shortener/
+linkify/
 ├── backend/
 │   ├── server.js
 │   ├── package.json
@@ -65,8 +65,8 @@ url-shortener/
 
 1. **Create backend directory and install dependencies:**
    ```bash
-   mkdir url-shortener
-   cd url-shortener
+   mkdir linkify
+   cd linkify
    mkdir backend
    cd backend
    npm init -y
@@ -104,7 +104,7 @@ url-shortener/
 
 1. **Create React app:**
    ```bash
-   cd .. # Go back to url-shortener directory
+   cd .. # Go back to linkify directory
    npx create-react-app frontend
    cd frontend
    npm install axios react-router-dom

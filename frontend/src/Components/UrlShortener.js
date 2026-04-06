@@ -88,11 +88,10 @@ const UrlShortener = () => {
       <div className="container">
         <section className="hero-panel">
           <div className="hero-copy">
-            <p className="section-tag">Link operations</p>
-            <h2>Turn messy URLs into polished, trackable short links.</h2>
+            <p className="section-tag">Link studio</p>
+            <h2>Turn long destinations into compact, branded links.</h2>
             <p className="hero-description">
-              Share links that look deliberate, stay easy to copy, and remain visible from
-              a lightweight admin workspace.
+              Built for fast, reliable link management with a clean, brand-aligned workspace.
             </p>
 
             <div className="hero-metrics">
@@ -101,11 +100,11 @@ const UrlShortener = () => {
                 <span className="metric-label">One-step shorten flow</span>
               </div>
               <div className="metric-card">
-                <span className="metric-value">Recent</span>
+                <span className="metric-value">Tracked</span>
                 <span className="metric-label">Last 5 links saved locally</span>
               </div>
               <div className="metric-card">
-                <span className="metric-value">Admin</span>
+                <span className="metric-value">Ready</span>
                 <span className="metric-label">Edit and monitor clicks</span>
               </div>
             </div>
@@ -114,7 +113,7 @@ const UrlShortener = () => {
           <div className="hero-card">
             <div className="hero-card-topline">
               <span className="status-dot" />
-              <p>Production-friendly link workspace</p>
+              <p>Structured delivery, clear links, reliable routing.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="url-form">
@@ -128,7 +127,7 @@ const UrlShortener = () => {
                   type="url"
                   value={originalUrl}
                   onChange={(e) => setOriginalUrl(e.target.value)}
-                  placeholder="https://www.example.com/research/report"
+                  placeholder="https://www.yourdomain.com/products/launch"
                   required
                   className="url-input"
                 />
@@ -144,8 +143,8 @@ const UrlShortener = () => {
 
             <div className="hero-callouts">
               <div className="callout-card">
-                <strong>Professional output</strong>
-                <span>Short links are generated from your deployed backend domain.</span>
+                <strong>Brand-consistent output</strong>
+                <span>Short links stay aligned with the same visual language as the rest of the app.</span>
               </div>
               <div className="callout-card">
                 <strong>Quick reuse</strong>
@@ -165,7 +164,7 @@ const UrlShortener = () => {
           <section className="result-section elevated-panel">
             <div className="result-header">
               <div>
-                <p className="section-tag">Latest result</p>
+                <p className="section-tag">Latest link</p>
                 <h3>Your short link is ready.</h3>
               </div>
               <span className="result-badge">Live</span>
@@ -205,8 +204,8 @@ const UrlShortener = () => {
 
         <section className="workspace-grid">
           <div className="info-panel elevated-panel">
-            <p className="section-tag">How this helps</p>
-            <h3>Built for cleaner sharing and safer handoff.</h3>
+            <p className="section-tag">Why it helps</p>
+            <h3>Built for cleaner sharing and lower-friction handoff.</h3>
             <ul className="feature-list">
               <li>Generate a short link without leaving the page.</li>
               <li>Open, copy, and reset from a single result block.</li>
@@ -218,7 +217,7 @@ const UrlShortener = () => {
             <div className="panel-header">
               <div>
                 <p className="section-tag">Recent links</p>
-                <h3>Last shortened in this browser</h3>
+                <h3>Saved in this browser</h3>
               </div>
               {recentUrls.length > 0 && (
                 <button onClick={clearRecentUrls} className="panel-link-button" type="button">

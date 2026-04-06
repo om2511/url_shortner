@@ -6,6 +6,7 @@ import './App.css';
 
 function App() {
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const brandLogo = `${process.env.PUBLIC_URL}/Logo.png`;
 
   const handleNavToggle = () => {
     setIsNavOpen((current) => !current);
@@ -27,10 +28,11 @@ function App() {
         <header className="site-header">
           <div className="container site-header-inner">
             <div className="brand-lockup">
-              <div className="brand-mark">S</div>
+              <div className="brand-mark">
+                <img src={brandLogo} alt="Linkify logo" />
+              </div>
               <div className="brand-copy">
-                <p className="brand-eyebrow">Smart links</p>
-                <h1>Shortener</h1>
+                <h1>Linkify</h1>
               </div>
             </div>
 
@@ -75,8 +77,7 @@ function App() {
 
         <footer className="site-footer">
           <div className="container site-footer-inner">
-            <p>Short links with a cleaner workflow, safer admin controls, and production-ready deployment.</p>
-            <span>Built for fast sharing and lightweight operations.</span>
+            <p>© 2026 Linkify. All rights reserved.</p>
           </div>
         </footer>
       </div>
