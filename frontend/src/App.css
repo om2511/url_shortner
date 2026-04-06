@@ -811,8 +811,19 @@ input:focus-visible {
 }
 
 .admin-hero-actions {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-chip {
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.logout-btn {
+  flex: 0 0 auto;
 }
 
 .stats-summary {
