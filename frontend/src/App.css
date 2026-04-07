@@ -1220,6 +1220,16 @@ input:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .login-benefits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .login-benefits .callout-card {
+    width: 100%;
+    min-width: 0;
+  }
+
   .hero-card-topline p {
     font-size: 0.65rem;
     line-height: 1.45;
